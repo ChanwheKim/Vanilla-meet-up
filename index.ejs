@@ -3,11 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width">
-    <title><%= htmlWebpackPlugin.options.title %></title>
+    <title>Meetup</title>
 </head>
 <body>
-    <div class="content">
-        <h1>Boilerplate</h1>
+    <div class="section-map">
+        <h1>Meetup</h1>
+        <input type="text" class="section-map__input">
+        <div id="map"></div>
     </div>
+
+    <div class="section-list">
+        <ul class="section-list__container"></ul>
+    </div>
+
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBH2-HGPGrJadRBzQ3roCVFHYT1ODufKI8&libraries=places"></script>
 </body>
 </html>
