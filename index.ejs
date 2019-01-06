@@ -7,9 +7,36 @@
     <link href="https://fonts.googleapis.com/css?family=Lato:100,300,300i,400,700" rel="stylesheet">
 </head>
 <body>
+    <header class="header row">
+        <div class="input-search">
+            <input type="text" class="map__input">
+            <button class="btn-search">SEARCH</button>
+        </div>
+        <div class="icon btn-bookmark">
+            <svg class="icon-like">
+                <use xlink:href="/assets/images/sprite.svg#icon-heart"></use>
+            </svg>
+        </div>
+        <span class="bookmark-count inactive">7</span>
+    </header>
+
     <div class="section-map row">
-        <input type="text" class="section-map__input">
         <div id="map"></div>
+        <ul class="section-map__bookmark inactive">
+            <li class="section-map__book-clip">
+                <img class="section-map__book-clip-img" src="https://secure.meetupstatic.com/photos/event/3/f/7/f/highres_474316255.jpeg">
+                <div class="book-clip-info">
+                    <div class="section-map__event-name">Upscale International AfterWork Happy Hour 6-11 PM! 🍺🍷🍹 * FREE Admission!</div>
+                    <div class="section-map__book-clip-date">2019-01-06</div>
+                    <div class="btn-move">move to this place<span>&rarr;</span></div>
+                </div>
+                <div class="icon btn-bookmark-delete">
+                    <svg class="icon-bin">
+                        <use xlink:href="/assets/images/sprite.svg#icon-bin"></use>
+                    </svg>
+                </div>
+            </li>
+        </ul>
     </div>
 
     <section class="content row">
@@ -20,31 +47,11 @@
         </div>
 
         <div class="section-list">
-            <ul class="section-list__container">
-                <!-- <li class="section-list__event-info">
-                    <div class="section-list__host-info">
-                        <img class="section-list__host-img" src="/assets/images/test.jpeg">
-                        <div class="section-list__host-name">Michael</div>
-                        <div class="section-list__created">1 days ago</div>
-                    </div>
-                    <div class="section-list__event-details">
-                        <div class="section-list__event-name">Nature Hike in Downtown Seoul - Inwangsan& Bukaksan</div>
-                        <div class="section-list__group-name">Goh Travel Korea - fun travel group !</div>
-                        <div class="section-list__date">Date : 2019-01-13</div>
-                        <div class="section-list__time">Time : 07:00 am</div>
-                        <div class="section-list__rsvp">RSVP : 20 persons</div>
-                        <div class="icon">
-                            <svg class="icon-heart">
-                                <use xlink:href="/assets/images/sprite.svg#icon-heart"></use>
-                            </svg>
-                        </div>
-                    </div>
-                </li> -->
-            </ul>
+            <ul class="section-list__container"></ul>
         </div>
     </section>
 
-    <footer><p>© 2019 Vanilla MeetUp - All Rights Reserved</p></footer>
+    <footer class="row"><p>© 2019 Vanilla MeetUp - All Rights Reserved</p></footer>
 
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBH2-HGPGrJadRBzQ3roCVFHYT1ODufKI8&libraries=places"></script>
 </body>

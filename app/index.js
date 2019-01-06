@@ -11,17 +11,106 @@ import $ from 'jquery';
 let eventsData = [];
 const latLng = {};
 let map;
-const key = 'AIzaSyBH2-HGPGrJadRBzQ3roCVFHYT1ODufKI8';
+const googleKey = 'AIzaSyBH2-HGPGrJadRBzQ3roCVFHYT1ODufKI8';
+const bookmarkData = {};
 
 window.onload = initMap;
 
+document.querySelector('.section-list__container').addEventListener('click', controlLikes);
+
+document.querySelector('.section-map__bookmark').addEventListener('click', deleteBookmark);
+
+document.querySelector('.btn-bookmark').addEventListener('click', showBookmarkBar);
+
+function showBookmarkBar(ev) {
+	const btn = ev.target.closest('.btn-bookmark');
+
+	if (btn) {
+		document.querySelector('.section-map__bookmark').classList.toggle('inactive');
+	}
+}
+
+function deleteBookmark(ev) {
+	const deleteIcon = ev.target.closest('.btn-bookmark-delete');
+
+	if (deleteIcon) {
+		const key = deleteIcon.parentElement.id;
+
+		delete bookmarkData[key];
+	}
+
+	localStorage.setItem('bookmark', JSON.stringify(bookmarkData));
+
+	deleteIcon.parentElement.remove();
+
+	document.querySelector('.bookmark-count').textContent = Object.values(bookmarkData).length;
+
+	const isEmpty = Object.values(bookmarkData).length === 0;
+
+	if (isEmpty) {
+		document.querySelector('.bookmark-count').classList.add('inactive');
+		document.querySelector('.section-map__bookmark').classList.add('inactive');
+	}
+}
+
+function controlLikes(ev) {
+	const bookmark = ev.target.closest('.event-clip');
+	const bookmarkIcon = bookmark.children[0];
+
+	if (bookmark) {
+		const id = bookmark.parentElement.parentElement.id;
+		const key = ev.target.closest('.section-list__event-info').dataset.key;
+		const lat = eventsData[id].venue ? eventsData[id].venue.lat : eventsData[id].group.lat;
+		const lng = eventsData[id].venue ? eventsData[id].venue.lon : eventsData[id].group.lon;
+		const bookmarkList = {
+			key,
+			eventName: eventsData[id].name,
+			date: eventsData[id].local_date,
+			img: eventsData[id].group.key_photo.highres_link,
+			latLng: { lat, lng },
+		};
+
+		if (!bookmarkData[key]) {
+			bookmarkData[key] = bookmarkList;
+
+			localStorage.setItem('bookmark', JSON.stringify(bookmarkData));
+
+			bookmarkIcon.classList.add('selected');
+			const htmlBookmarkStr = makeBookmarkEl(bookmarkList);
+
+			document.querySelector('.section-map__bookmark').insertAdjacentHTML('beforeend', htmlBookmarkStr);
+
+			document.querySelector('.bookmark-count').textContent = Object.values(bookmarkData).length;
+			document.querySelector('.bookmark-count').classList.remove('inactive');
+		}
+	}
+}
+
+function makeBookmarkEl(bookmark) {
+	return `
+		<li class="section-map__book-clip" id="${bookmark.key}">
+			<img class="section-map__book-clip-img" src="${bookmark.img}">
+			<div class="book-clip-info">
+					<div class="section-map__event-name">${bookmark.eventName}</div>
+					<div class="section-map__book-clip-date">${bookmark.date}</div>
+					<div class="btn-move" data-lat="${bookmark.latLng.lat}" data-lng="${bookmark.latLng.lng}">move to this place<span>&rarr;</span></div>
+			</div>
+			<div class="icon btn-bookmark-delete">
+				<svg class="icon-bin">
+					<use xlink:href="/assets/images/sprite.svg#icon-bin"></use>
+				</svg>
+			</div>
+		</li>
+	`;
+}
+
 function initMap() {
 	map = new google.maps.Map(document.getElementById('map'), {
-		center: { lat: 40.730610, lng: -73.935242 },
+		center: { lat: 37.773972, lng: -122.431297 },
 		zoom: 13,
 	});
 
-	const input = document.querySelector('.section-map__input');
+	const input = document.querySelector('.map__input');
 	const searchBox = new google.maps.places.SearchBox(input);
 
 	searchBox.addListener('places_changed', () => {
@@ -41,7 +130,6 @@ function initMap() {
 }
 
 function controlMeetUpData(location) {
-
 	const meetUpPromise = requestMeetUpLists();
 
 	meetUpPromise
@@ -54,7 +142,7 @@ function controlMeetUpData(location) {
 
 function requestMeetUpLists() {
 	return new Promise((resolve, reject) => {
-		const url = `https://api.meetup.com/find/upcoming_events?&sign=true&lat=${latLng.lat}&lon=${latLng.lng}2&key=d1f4549d314392d4b48651c3e4a&fields=event_hosts,featured_photo&page=20`;
+		const url = `https://api.meetup.com/find/upcoming_events?&sign=true&lat=${latLng.lat}&lon=${latLng.lng}2&key=d1f4549d314392d4b48651c3e4a&fields=event_hosts,comment_count,group_key_photo&page=20`;
 
 		$.ajax({
 			dataType: 'jsonp',
@@ -97,6 +185,7 @@ function displayLists() {
 	let lists = '';
 
 	for (let i = 0; i < 10; i++) {
+		const commentCount = eventsData[i].comment_count ? eventsData[i].comment_count : 0;
 		const hostName = eventsData[i].event_hosts ? eventsData[i].event_hosts[0].name : 'Anonymous';
 		const hostImg = eventsData[i].event_hosts ? eventsData[i].event_hosts[0].photo.thumb_link : '/assets/images/default-user-image.png';
 		let createdTime = eventsData[i].created ? eventsData[i].created : eventsData[i].group.created;
@@ -104,7 +193,7 @@ function displayLists() {
 		createdTime = convertCreatedTime(createdTime);
 
 		const listMarkup = `
-		<li class="section-list__event-info">
+		<li class="section-list__event-info" id="${i}" data-key="${eventsData[i].id}">
 			<div class="section-list__host-info">
 				<img class="section-list__host-img" src="${hostImg}">
 				<div class="section-list__host-name">${hostName}</div>
@@ -116,10 +205,16 @@ function displayLists() {
 				<div class="section-list__date">Date : ${eventsData[i].local_date}</div>
 				<div class="section-list__time">Time : ${eventsData[i].local_time}</div>
 				<div class="section-list__rsvp">RSVP : ${eventsData[i].yes_rsvp_count} guests</div>
-				<div class="icon">
+				<div class="icon event-clip">
 						<svg class="icon-heart">
 								<use xlink:href="/assets/images/sprite.svg#icon-heart"></use>
 						</svg>
+				</div>
+				<div class="icon comment-wrapper">
+					<svg class="icon-comment">
+						<use xlink:href="/assets/images/sprite.svg#icon-comment"></use>
+					</svg>
+					<span>${commentCount}</span>
 				</div>
 			</div>
 		</li>
@@ -150,4 +245,5 @@ function convertCreatedTime(milliSec) {
 
 function handleError(err) {
 	alert('Something went wrong. Could you try it again?');
+	console.log(err);
 }
