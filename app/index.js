@@ -15,12 +15,10 @@ const key = 'AIzaSyBH2-HGPGrJadRBzQ3roCVFHYT1ODufKI8';
 
 window.onload = initMap;
 
-document.querySelector('.section-map__input').addEventListener('keydown', controlMeetUpData);
-
 function initMap() {
 	map = new google.maps.Map(document.getElementById('map'), {
 		center: { lat: 40.730610, lng: -73.935242 },
-		zoom: 11,
+		zoom: 13,
 	});
 
 	const input = document.querySelector('.section-map__input');
@@ -51,39 +49,12 @@ function controlMeetUpData(location) {
 		.then(changeMapView)
 		.then(displayEvents)
 		.then(displayLists)
-}
-
-function getSearchWord(ev) {
-	const searchWord = ev.target.value;
-
-	return searchWord;
-}
-
-function getLocation(city) {
-	return new Promise((resolve, reject) => {
-		const geoCoder = new google.maps.Geocoder();
-
-		new Promise((resolve, reject) => {
-			geoCoder.geocode( { 'address' : city }, handleLocation);
-
-			function handleLocation (result, status) {
-				if (status === google.maps.GeocoderStatus.OK) {
-					latLng.lat = parseFloat(result[0].geometry.location.lat());
-					latLng.lng = parseFloat(result[0].geometry.location.lng());
-					resolve(latLng);
-				} else {
-					alert(status);
-				}
-			}
-		}).then(() => {
-			resolve(latLng);
-		});
-	});
+		.catch(handleError)
 }
 
 function requestMeetUpLists() {
 	return new Promise((resolve, reject) => {
-		const url = `https://api.meetup.com/find/upcoming_events?&sign=true&lat=${latLng.lat}&lon=${latLng.lng}2&key=d1f4549d314392d4b48651c3e4a&fields=event_hosts&page=20`;
+		const url = `https://api.meetup.com/find/upcoming_events?&sign=true&lat=${latLng.lat}&lon=${latLng.lng}2&key=d1f4549d314392d4b48651c3e4a&fields=event_hosts,featured_photo&page=20`;
 
 		$.ajax({
 			dataType: 'jsonp',
@@ -101,6 +72,7 @@ function requestMeetUpLists() {
 
 function saveUpcomingEvents(response) {
 	eventsData = response.data.events;
+	console.log(response.data);
 }
 
 function changeMapView() {
@@ -126,17 +98,31 @@ function displayLists() {
 
 	for (let i = 0; i < 10; i++) {
 		const hostName = eventsData[i].event_hosts ? eventsData[i].event_hosts[0].name : 'Anonymous';
-		const hostImg = eventsData[i].event_hosts ? eventsData[i].event_hosts[0].photo.thumb_link : '';
+		const hostImg = eventsData[i].event_hosts ? eventsData[i].event_hosts[0].photo.thumb_link : '/assets/images/default-user-image.png';
+		let createdTime = eventsData[i].created ? eventsData[i].created : eventsData[i].group.created;
+
+		createdTime = convertCreatedTime(createdTime);
+
 		const listMarkup = `
-			<li class="section-list__event-info">
-				<div class="section-list__event-name">Event Name : ${eventsData[i].name}</div>
-				<div class="section-list__group-name">Group Name : ${eventsData[i].group.name}</div>
-				<div class="section-list__date">Local Date : ${eventsData[i].local_date}</div>
-				<div class="section-list__time">Local Time : ${eventsData[i].local_time}</div>
-				<div class="section-list__rsvp">Yes RSVP : ${eventsData[i].yes_rsvp_count}</div>
-				<div class="section-list__host-name">${hostName}</div>
+		<li class="section-list__event-info">
+			<div class="section-list__host-info">
 				<img class="section-list__host-img" src="${hostImg}">
-			</li>
+				<div class="section-list__host-name">${hostName}</div>
+				<div class="section-list__created">${createdTime}</div>
+			</div>
+			<div class="section-list__event-details">
+				<div class="section-list__event-name">${eventsData[i].name}</div>
+				<div class="section-list__group-name">${eventsData[i].group.name}</div>
+				<div class="section-list__date">Date : ${eventsData[i].local_date}</div>
+				<div class="section-list__time">Time : ${eventsData[i].local_time}</div>
+				<div class="section-list__rsvp">RSVP : ${eventsData[i].yes_rsvp_count} guests</div>
+				<div class="icon">
+						<svg class="icon-heart">
+								<use xlink:href="/assets/images/sprite.svg#icon-heart"></use>
+						</svg>
+				</div>
+			</div>
+		</li>
 		`;
 
 		lists += listMarkup;
@@ -146,7 +132,22 @@ function displayLists() {
 	document.querySelector('.section-list__container').innerHTML = lists;
 }
 
+function convertCreatedTime(milliSec) {
+	const created = (milliSec) / (1000 * 60 * 60);
+	const now = new Date() / (1000 * 60 * 60);
+	let timeDiff = parseInt(now - created);
+	let timeLable;
+
+	if (timeDiff >= 24) {
+		timeDiff = parseInt(timeDiff % 24);
+		timeLable = timeDiff === 1 ? `${timeDiff} day ago` : `${timeDiff} days ago`;
+	} else {
+		timeLable === 1 ? `${timeDiff} hour ago`: `${timeDiff} hours ago`;
+	}
+
+	return timeLable;
+}
+
 function handleError(err) {
-	console.log('error');
-	console.log(err);
+	alert('Something went wrong. Could you try it again?');
 }

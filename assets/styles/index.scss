@@ -1,16 +1,31 @@
 // Apply a natural box layout model to all elements
 // but allowing components to change
 // http://www.paulirish.com/2012/box-sizing-border-box-ftw/
+$color-black:#171a1e;
+
+$color-grey-light-1 :  #E0DDD9;
+$color-grey-light-2 : #B9BCC1;
+
 html, body {
     box-sizing: border-box;
     background-color: white;
 }
 *, *:before, *:after {
     box-sizing: inherit;
+    font-family: 'Lato', 'Arial', sans-serif;
+}
+
+body {
+    padding: 100px 0px 50px 0px;
 }
 
 h1 {
     text-align: center;
+}
+
+.row {
+    width: 1140px;
+    margin: 0 auto;
 }
 
 .section-map {
@@ -32,53 +47,145 @@ h1 {
 
     #map {
         height: 500px;
-        width: 700px;
+        width: 100%;
         margin: 0 auto;
     }
 }
 
+.content {
+    width: 1140px;
+    display: flex;
+    flex-direction: row;
+    padding-top: 50px;
+    padding-bottom: 50px;
+}
+
+.section-city {
+    width: 300px;
+    height: 600px;
+    padding: 10px 20px;
+    border-right: 1px solid $color-grey-light-1;
+}
+
 .section-list {
+    height: 600px;
+    overflow: scroll;
+
     &__container {
         padding: 0px;
+        padding-left: 170px;
+        width: 840px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
     }
 
     &__event-info {
         display: flex;
+    }
+
+    &__host-info {
+        position: relative;
+        display: flex;
         flex-direction: column;
         align-items: center;
-        border: 1px solid grey;
-
-        & > * {
-            margin-bottom: 10px;
-        }
-    }
-
-    &__event-name {
-
-    }
-
-    &__group-name {
-
-    }
-
-    &__date {
-
-    }
-
-    &__time {
-
-    }
-
-    &__rsvp {
-
-    }
-
-    &__host-name {
-
+        margin-right: 10px;
+        text-align: center;
+        padding-top: 10px;
+        width: 90px;
     }
 
     &__host-img {
-        width: 70px;
-        border-radius: 20px;
+        width: 65px;
+        height: 65px;
+        border-radius: 100px;
+        margin-bottom: 10px;
+        box-shadow: 5px 5px 25px 0 rgba(46, 61, 73, 0.2);
+        background-color: #F59A83;
     }
+
+    &__host-name {
+        font-size: 15px;
+        margin-bottom: 5px;
+        display: inline;
+    }
+
+    &__created {
+        font-size: 13px;
+        color: $color-grey-light-2;
+    }
+
+    &__event-details {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        width: 450px;
+        height: 177px;
+        padding: 20px 20px; 
+        box-shadow: 5px 5px 25px 0 rgba(46, 61, 73, 0.2);
+        margin-bottom: 20px;
+        border-radius: 7px;
+        position: relative;
+        color: rgba($color-black, .8);
+        font-size: 15px;
+        transition: all .3s;
+
+        & > *:not(:last-child) {
+            margin-bottom: 5px;
+        }
+
+        &:hover {
+            box-shadow: 2px 4px 8px 0 rgba(46, 61, 73, 0.2);
+        }
+    }
+
+    &__event-name,
+    &__group-name {
+        width: 380px;
+        display: inline-block;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    &__event-name {
+        font-weight: 700;
+        margin-bottom: 5px;
+    }
+
+    &__group-name {
+        margin-bottom: 17px !important;
+    }
+
+    &__date,
+    &__time,
+    &__rsvp  {
+        color: $color-grey-light-2;
+    }
+}
+
+.icon-heart {
+    width: 30px;
+    height: 30px;
+    fill: transparent;
+    stroke: #F59A83;
+    stroke-width: 2px;
+    position: absolute;
+    top: 7px;
+    right: 7px;
+    transition: fill .3s;
+    cursor: pointer;
+
+    &:hover {
+
+    }
+}
+
+footer {
+    text-align: center;
+    border-top: 1px solid $color-grey-light-1;
+    height: 170px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }

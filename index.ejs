@@ -4,17 +4,47 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width">
     <title>Meetup</title>
+    <link href="https://fonts.googleapis.com/css?family=Lato:100,300,300i,400,700" rel="stylesheet">
 </head>
 <body>
-    <div class="section-map">
-        <h1>Meetup</h1>
+    <div class="section-map row">
         <input type="text" class="section-map__input">
         <div id="map"></div>
     </div>
 
-    <div class="section-list">
-        <ul class="section-list__container"></ul>
-    </div>
+    <section class="content row">
+        <div class="section-city">
+            <h1 class="city-name">City Name</h1>
+            <div class="city-member">Member</div>
+            <div class="local-time">Local Time</div>
+        </div>
+
+        <div class="section-list">
+            <ul class="section-list__container">
+                <!-- <li class="section-list__event-info">
+                    <div class="section-list__host-info">
+                        <img class="section-list__host-img" src="/assets/images/test.jpeg">
+                        <div class="section-list__host-name">Michael</div>
+                        <div class="section-list__created">1 days ago</div>
+                    </div>
+                    <div class="section-list__event-details">
+                        <div class="section-list__event-name">Nature Hike in Downtown Seoul - Inwangsan& Bukaksan</div>
+                        <div class="section-list__group-name">Goh Travel Korea - fun travel group !</div>
+                        <div class="section-list__date">Date : 2019-01-13</div>
+                        <div class="section-list__time">Time : 07:00 am</div>
+                        <div class="section-list__rsvp">RSVP : 20 persons</div>
+                        <div class="icon">
+                            <svg class="icon-heart">
+                                <use xlink:href="/assets/images/sprite.svg#icon-heart"></use>
+                            </svg>
+                        </div>
+                    </div>
+                </li> -->
+            </ul>
+        </div>
+    </section>
+
+    <footer><p>© 2019 Vanilla MeetUp - All Rights Reserved</p></footer>
 
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBH2-HGPGrJadRBzQ3roCVFHYT1ODufKI8&libraries=places"></script>
 </body>
