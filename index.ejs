@@ -7,51 +7,58 @@
     <link href="https://fonts.googleapis.com/css?family=Lato:100,300,300i,400,700" rel="stylesheet">
 </head>
 <body>
-    <header class="header row">
-        <div class="input-search">
-            <input type="text" class="map__input">
-            <button class="btn-search">SEARCH</button>
-        </div>
-        <div class="icon btn-bookmark">
-            <svg class="icon-like">
-                <use xlink:href="/assets/images/sprite.svg#icon-heart"></use>
-            </svg>
-        </div>
-        <span class="bookmark-count inactive">7</span>
-    </header>
+    <div class="row">
+        <header class="header">
+            <div class="input-search">
+                <input type="text" class="map__input">
+                <button class="btn-search">SEARCH</button>
+            </div>
+            <div class="icon btn-bookmark">
+                <svg class="icon-like">
+                    <use xlink:href="/assets/images/sprite.svg#icon-heart"></use>
+                </svg>
+                <span class="bookmark-count inactive"></span>
+            </div>
+        </header>
 
-    <div class="section-map row">
-        <div id="map"></div>
-        <ul class="section-map__bookmark inactive">
-            <li class="section-map__book-clip">
-                <img class="section-map__book-clip-img" src="https://secure.meetupstatic.com/photos/event/3/f/7/f/highres_474316255.jpeg">
-                <div class="book-clip-info">
-                    <div class="section-map__event-name">Upscale International AfterWork Happy Hour 6-11 PM! 🍺🍷🍹 * FREE Admission!</div>
-                    <div class="section-map__book-clip-date">2019-01-06</div>
-                    <div class="btn-move">move to this place<span>&rarr;</span></div>
+        <div class="section-map">
+            <div id="map"></div>
+            <ul class="section-map__bookmark bookmark-inactive"></ul>
+        </div>
+
+        <section class="content">
+            <div class="section-city">
+                <h1 class="city-name">Seoul</h1>
+                <div class="city-member">300 members in Seoul</div>
+                <div class="local-time">Local Time</div>
+            </div>
+
+            <div class="section-list">
+                <ul class="section-list__container"></ul>
+            </div>
+        </section>
+
+        <div class="side-bar sidebar-inactive">
+            <div class="icon btn-cross">
+                <svg class="icon-cross">
+                    <use xlink:href="/assets/images/sprite.svg#icon-small-cross"></use>
+                </svg>
+            </div>
+            <div class="side-bar__group-info">
+                <h1 class="side-bar__group-info--name"></h1>
+                <img class="side-bar__group-info--img" src="" alt="group main photo">
+                <p class="side-bar__group-info--short-description"></p>
+                <div class="side-bar__album">
+                    <img class="side-bar__album--photo" src="" alt="group album photo" onerror="this.src='/assets/images/default-user-image.png'">
+                    <img class="side-bar__album--photo" src="" alt="group album photo" onerror="this.src='/assets/images/default-user-image.png'">
+                    <img class="side-bar__album--photo" src="" alt="group album photo" onerror="this.src='/assets/images/default-user-image.png'">
                 </div>
-                <div class="icon btn-bookmark-delete">
-                    <svg class="icon-bin">
-                        <use xlink:href="/assets/images/sprite.svg#icon-bin"></use>
-                    </svg>
-                </div>
-            </li>
-        </ul>
+            </div>
+            <ul class="side-bar__comment"></ul>
+        </div>
+
+        <footer><p>© 2019 Vanilla MeetUp - All Rights Reserved</p></footer>
     </div>
-
-    <section class="content row">
-        <div class="section-city">
-            <h1 class="city-name">City Name</h1>
-            <div class="city-member">Member</div>
-            <div class="local-time">Local Time</div>
-        </div>
-
-        <div class="section-list">
-            <ul class="section-list__container"></ul>
-        </div>
-    </section>
-
-    <footer class="row"><p>© 2019 Vanilla MeetUp - All Rights Reserved</p></footer>
 
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBH2-HGPGrJadRBzQ3roCVFHYT1ODufKI8&libraries=places"></script>
 </body>

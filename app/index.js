@@ -12,36 +12,167 @@ let eventsData = [];
 const latLng = {};
 let map;
 const googleKey = 'AIzaSyBH2-HGPGrJadRBzQ3roCVFHYT1ODufKI8';
-const bookmarkData = {};
+let bookmarkData = {};
 
-window.onload = initMap;
+window.onload = function init() {
+	bookmarkData = JSON.parse(localStorage.getItem('bookmark'));
 
-document.querySelector('.section-list__container').addEventListener('click', controlLikes);
+	Object.values(bookmarkData).forEach((bookmark) => {
+		displayBookmarkList(bookmark);
+	});
 
-document.querySelector('.section-map__bookmark').addEventListener('click', deleteBookmark);
+	initMap();
+};
+
+document.querySelector('.section-list__container').addEventListener('click', (ev) => {
+	if (ev.target.closest('.event-clip')) {
+		controlLikes(ev);
+	} else if (ev.target.closest('.section-list__event-details')) {
+		controlGroupInfo(ev);
+	}
+});
+
+document.querySelector('.btn-cross').addEventListener('click', hideSidebar);
+
+function hideSidebar(ev) {
+	const btnClose = ev.target.closest('.btn-cross');
+
+	if (btnClose) {
+		document.querySelector('.side-bar').classList.add('sidebar-inactive');
+	}
+}
+
+function controlGroupInfo(ev) {
+	const allItemsPromises = [];
+	const eventList = ev.target.closest('.section-list__event-info');
+	const id = eventList.id;
+	const idx = eventList.dataset.idx;
+	const name = eventsData[idx].group.urlname;
+
+	const groupInfoPromise = requestGroupInfo(name);
+	const commentPromise = requestComments(id, name);
+
+	allItemsPromises.push(groupInfoPromise);
+	allItemsPromises.push(commentPromise);
+
+	Promise.all(allItemsPromises)
+		.then((detailedEventInfo) => {
+			displayGroupInfo(detailedEventInfo[0].data);
+			displayComments(detailedEventInfo[1].data);
+		})
+		.catch(handleError);
+}
+
+function displayGroupInfo(groupInfo) {
+	const groupName = document.querySelector('.side-bar__group-info--name');
+	const mainImg = document.querySelector('.side-bar__group-info--img');
+	const description = document.querySelector('.side-bar__group-info--short-description');
+	const albums = document.querySelectorAll('.side-bar__album--photo');
+
+	groupName.textContent = groupInfo.name;
+	mainImg.src = groupInfo.key_photo.photo_link;
+	description.textContent = groupInfo.plain_text_description;
+
+	albums.forEach((image, idx) => {
+		try {
+			if (groupInfo.event_sample[idx].photo_album.photo_sample[idx].photo_link) {
+				image.src = groupInfo.event_sample[idx].photo_album.photo_sample[idx].photo_link;
+			}
+		} catch (err) {
+			console.log(err);
+		}
+
+		document.querySelector('.side-bar').classList.remove('sidebar-inactive');
+	});
+}
+
+function displayComments(commentInfo) {
+	let commentHtmlStr = '';
+
+	commentInfo.forEach((comment) => {
+		const memberImg = comment.member.photo.thumb_link ? comment.member.photo.thumb_link : '/assets/images/default-user-image.png';
+
+		commentHtmlStr += `
+		<li class="side-bar__comment--list">
+			<div class="comment-user">
+				<img class="user-photo" src="${memberImg}">
+				<div class="member-name">${comment.member.name}</div>
+			</div>
+			<div class="side-bar__comment--comment">${comment.comment}</div>
+		</li>
+	`;
+	});
+
+	document.querySelector('.side-bar__comment').innerHTML = commentHtmlStr;
+}
+
+function requestComments(eventId, urlName) {
+	return new Promise((resolve, reject) => {
+		const url = `https://api.meetup.com/${urlName}/events/${eventId}/comments?&sign=true&photo-host=public&page=20`;
+
+		$.ajax({
+			dataType: 'jsonp',
+			url,
+			type: 'GET',
+			success: function handleData(data) {
+				resolve(data);
+			},
+			error: function handleError(error) {
+				reject(error);
+			},
+		});
+	});
+}
+
+function requestGroupInfo(urlName) {
+	return new Promise((resolve, reject) => {
+		const url = `https://api.meetup.com/${urlName}?&sign=true&fields=plain_text_description,event_sample`;
+
+		$.ajax({
+			dataType: 'jsonp',
+			url,
+			type: 'GET',
+			success: function handleData(data) {
+				resolve(data);
+			},
+			error: function handleError(error) {
+				reject(error);
+			},
+		});
+	});
+}
+
+document.querySelector('.section-map__bookmark').addEventListener('click', (ev) => {
+	const deleteIconEl = ev.target.closest('.btn-bookmark-delete');
+	const eventId = deleteIconEl.parentElement.id;
+
+	if (deleteIconEl) {
+		const bookmarks = document.querySelectorAll('.section-map__book-clip');
+
+		deleteBookmark(bookmarks, eventId);
+	}
+});
 
 document.querySelector('.btn-bookmark').addEventListener('click', showBookmarkBar);
 
 function showBookmarkBar(ev) {
-	const btn = ev.target.closest('.btn-bookmark');
+	const bookmarkBtn = ev.target.closest('.btn-bookmark');
 
-	if (btn) {
-		document.querySelector('.section-map__bookmark').classList.toggle('inactive');
+	if (bookmarkBtn) {
+		document.querySelector('.section-map__bookmark').classList.toggle('bookmark-inactive');
 	}
 }
 
-function deleteBookmark(ev) {
-	const deleteIcon = ev.target.closest('.btn-bookmark-delete');
-
-	if (deleteIcon) {
-		const key = deleteIcon.parentElement.id;
-
-		delete bookmarkData[key];
-	}
+function deleteBookmark(bookmarks, eventId) {
+	delete bookmarkData[eventId];
 
 	localStorage.setItem('bookmark', JSON.stringify(bookmarkData));
 
-	deleteIcon.parentElement.remove();
+	bookmarks.forEach((bookmarkedEl) => {
+		if (bookmarkedEl.id === eventId) {
+			bookmarkedEl.remove();
+		}
+	});
 
 	document.querySelector('.bookmark-count').textContent = Object.values(bookmarkData).length;
 
@@ -49,46 +180,69 @@ function deleteBookmark(ev) {
 
 	if (isEmpty) {
 		document.querySelector('.bookmark-count').classList.add('inactive');
-		document.querySelector('.section-map__bookmark').classList.add('inactive');
+		document.querySelector('.section-map__bookmark').classList.add('bookmark-inactive');
+	}
+
+	const eventLists = document.querySelector('.section-list__container').children;
+
+	for (let i = 0; i < eventLists.length; i++) {
+		if (eventLists[i].id === eventId) {
+			const iconHeartSmall = eventLists[i].children[1].children[5].children[0];
+
+			iconHeartSmall.classList.remove('selected');
+		}
 	}
 }
 
 function controlLikes(ev) {
 	const bookmark = ev.target.closest('.event-clip');
-	const bookmarkIcon = bookmark.children[0];
 
 	if (bookmark) {
-		const id = bookmark.parentElement.parentElement.id;
-		const key = ev.target.closest('.section-list__event-info').dataset.key;
-		const lat = eventsData[id].venue ? eventsData[id].venue.lat : eventsData[id].group.lat;
-		const lng = eventsData[id].venue ? eventsData[id].venue.lon : eventsData[id].group.lon;
-		const bookmarkList = {
-			key,
-			eventName: eventsData[id].name,
-			date: eventsData[id].local_date,
-			img: eventsData[id].group.key_photo.highres_link,
-			latLng: { lat, lng },
-		};
+		const eventId = bookmark.parentElement.parentElement.id;
+		const idx = bookmark.parentElement.parentElement.dataset.idx;
+		const selectedEvent = eventsData[idx];
+		const lat = selectedEvent.venue ? selectedEvent.venue.lat : selectedEvent.group.lat;
+		const lng = selectedEvent.venue ? selectedEvent.venue.lon : selectedEvent.group.lon;
+		const bookmarkedBefore = bookmarkData[eventId] !== undefined;
+		const bookmarkIcon = bookmark.children[0];
+		let bookmarkList;
 
-		if (!bookmarkData[key]) {
-			bookmarkData[key] = bookmarkList;
+		if (bookmarkedBefore) {
+			const bookmarkEl = document.querySelectorAll('.section-map__book-clip');
+
+			deleteBookmark(bookmarkEl, eventId);
+		} else {
+			bookmarkList = {
+				eventId,
+				eventName: selectedEvent.name,
+				date: selectedEvent.local_date,
+				img: selectedEvent.group.key_photo.highres_link,
+				latLng: { lat, lng },
+			};
+
+			bookmarkData[eventId] = bookmarkList;
 
 			localStorage.setItem('bookmark', JSON.stringify(bookmarkData));
 
+			displayBookmarkList(bookmarkList);
+
 			bookmarkIcon.classList.add('selected');
-			const htmlBookmarkStr = makeBookmarkEl(bookmarkList);
-
-			document.querySelector('.section-map__bookmark').insertAdjacentHTML('beforeend', htmlBookmarkStr);
-
-			document.querySelector('.bookmark-count').textContent = Object.values(bookmarkData).length;
-			document.querySelector('.bookmark-count').classList.remove('inactive');
 		}
 	}
 }
 
+function displayBookmarkList(bookmark) {
+	const htmlBookmarkStr = makeBookmarkEl(bookmark);
+
+	document.querySelector('.section-map__bookmark').insertAdjacentHTML('beforeend', htmlBookmarkStr);
+
+	document.querySelector('.bookmark-count').textContent = Object.values(bookmarkData).length;
+	document.querySelector('.bookmark-count').classList.remove('inactive');
+}
+
 function makeBookmarkEl(bookmark) {
 	return `
-		<li class="section-map__book-clip" id="${bookmark.key}">
+		<li class="section-map__book-clip" id="${bookmark.eventId}">
 			<img class="section-map__book-clip-img" src="${bookmark.img}">
 			<div class="book-clip-info">
 					<div class="section-map__event-name">${bookmark.eventName}</div>
@@ -121,11 +275,13 @@ function initMap() {
 	});
 
 	google.maps.event.addListener(map, 'click', (event) => {
-		const clickLat = event.latLng.lat();
-		const clickLon = event.latLng.lng();
+		const latClicked = event.latLng.lat();
+		const lonClicked = event.latLng.lng();
 
-		console.log(clickLat);
-		console.log(clickLon);
+		latLng.lat = latClicked;
+		latLng.lng = lonClicked;
+
+		controlMeetUpData();
 	});
 }
 
@@ -171,7 +327,7 @@ function displayEvents() {
 	for (let i = 0; i < eventsData.length; i++) {
 		const lat = eventsData[i].venue ? eventsData[i].venue.lat : eventsData[i].group.lat;
 		const lng = eventsData[i].venue ? eventsData[i].venue.lon : eventsData[i].group.lon;
-		const marker = new google.maps.Marker({
+		const newMarker = new google.maps.Marker({
 			position: {
 				lat,
 				lng,
@@ -193,7 +349,7 @@ function displayLists() {
 		createdTime = convertCreatedTime(createdTime);
 
 		const listMarkup = `
-		<li class="section-list__event-info" id="${i}" data-key="${eventsData[i].id}">
+		<li class="section-list__event-info" id="${eventsData[i].id}" data-idx="${i}">
 			<div class="section-list__host-info">
 				<img class="section-list__host-img" src="${hostImg}">
 				<div class="section-list__host-name">${hostName}</div>
