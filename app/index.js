@@ -9,30 +9,48 @@ import 'styles/index.scss';
 import $ from 'jquery';
 
 let eventsData = [];
-const latLng = {};
-let map;
-const googleKey = 'AIzaSyBH2-HGPGrJadRBzQ3roCVFHYT1ODufKI8';
 let bookmarkData = {};
+const cityInfo = {};
+const location = {};
+let topicData = [];
+let map;
 
-window.onload = function init() {
+window.onload = function initializeApp() {
 	bookmarkData = JSON.parse(localStorage.getItem('bookmark'));
 
 	Object.values(bookmarkData).forEach((bookmark) => {
 		displayBookmarkList(bookmark);
 	});
 
-	initMap();
+	setupEventListener();
+
+	initializeMap();
 };
 
-document.querySelector('.section-list__container').addEventListener('click', (ev) => {
-	if (ev.target.closest('.event-clip')) {
-		controlLikes(ev);
-	} else if (ev.target.closest('.section-list__event-details')) {
-		controlGroupInfo(ev);
-	}
-});
+function setupEventListener() {
+	document.querySelector('.btn-cross').addEventListener('click', hideSidebar);
 
-document.querySelector('.btn-cross').addEventListener('click', hideSidebar);
+	document.querySelector('.section-list__container').addEventListener('click', (ev) => {
+		if (ev.target.closest('.icon-bookmark')) {
+			controlBookmark(ev);
+		} else if (ev.target.closest('.section-list__event-details')) {
+			controlGroupInfo(ev);
+		}
+	});
+
+	document.querySelector('.section-map__bookmark').addEventListener('click', (ev) => {
+		const bookmarkDelete = ev.target.closest('.btn-bookmark-delete');
+		const eventId = bookmarkDelete.parentElement.id;
+
+		if (bookmarkDelete) {
+			const bookmarks = document.querySelectorAll('.section-map__bookmark--list');
+
+			deleteBookmark(bookmarks, eventId);
+		}
+	});
+
+	document.querySelector('.btn-bookmark').addEventListener('click', displayBookmarkBar);
+}
 
 function hideSidebar(ev) {
 	const btnClose = ev.target.closest('.btn-cross');
@@ -43,19 +61,19 @@ function hideSidebar(ev) {
 }
 
 function controlGroupInfo(ev) {
-	const allItemsPromises = [];
+	const allDataPromises = [];
 	const eventList = ev.target.closest('.section-list__event-info');
-	const id = eventList.id;
+	const eventId = eventList.id;
 	const idx = eventList.dataset.idx;
-	const name = eventsData[idx].group.urlname;
+	const groupName = eventsData[idx].group.urlname;
 
-	const groupInfoPromise = requestGroupInfo(name);
-	const commentPromise = requestComments(id, name);
+	const groupInfoPromise = requestGroupInfo(groupName);
+	const commentPromise = requestComments(eventId, groupName);
 
-	allItemsPromises.push(groupInfoPromise);
-	allItemsPromises.push(commentPromise);
+	allDataPromises.push(groupInfoPromise);
+	allDataPromises.push(commentPromise);
 
-	Promise.all(allItemsPromises)
+	Promise.all(allDataPromises)
 		.then((detailedEventInfo) => {
 			displayGroupInfo(detailedEventInfo[0].data);
 			displayComments(detailedEventInfo[1].data);
@@ -64,16 +82,16 @@ function controlGroupInfo(ev) {
 }
 
 function displayGroupInfo(groupInfo) {
-	const groupName = document.querySelector('.side-bar__group-info--name');
-	const mainImg = document.querySelector('.side-bar__group-info--img');
-	const description = document.querySelector('.side-bar__group-info--short-description');
-	const albums = document.querySelectorAll('.side-bar__album--photo');
+	const groupNameEl = document.querySelector('.side-bar__group-info--name');
+	const mainImgEl = document.querySelector('.side-bar__group-info--img');
+	const descriptionEl = document.querySelector('.side-bar__group-info--short-description');
+	const albumsEls = document.querySelectorAll('.side-bar__album--photo');
 
-	groupName.textContent = groupInfo.name;
-	mainImg.src = groupInfo.key_photo.photo_link;
-	description.textContent = groupInfo.plain_text_description;
+	groupNameEl.textContent = groupInfo.name;
+	mainImgEl.src = groupInfo.key_photo.photo_link;
+	descriptionEl.textContent = groupInfo.plain_text_description;
 
-	albums.forEach((image, idx) => {
+	albumsEls.forEach((image, idx) => {
 		try {
 			if (groupInfo.event_sample[idx].photo_album.photo_sample[idx].photo_link) {
 				image.src = groupInfo.event_sample[idx].photo_album.photo_sample[idx].photo_link;
@@ -93,14 +111,14 @@ function displayComments(commentInfo) {
 		const memberImg = comment.member.photo.thumb_link ? comment.member.photo.thumb_link : '/assets/images/default-user-image.png';
 
 		commentHtmlStr += `
-		<li class="side-bar__comment--list">
-			<div class="comment-user">
-				<img class="user-photo" src="${memberImg}">
-				<div class="member-name">${comment.member.name}</div>
-			</div>
-			<div class="side-bar__comment--comment">${comment.comment}</div>
-		</li>
-	`;
+			<li class="side-bar__comment--list">
+				<div class="comment-user">
+					<img class="user-photo" src="${memberImg}">
+					<div class="member-name">${comment.member.name}</div>
+				</div>
+				<div class="side-bar__comment--comment">${comment.comment}</div>
+			</li>
+		`;
 	});
 
 	document.querySelector('.side-bar__comment').innerHTML = commentHtmlStr;
@@ -142,20 +160,7 @@ function requestGroupInfo(urlName) {
 	});
 }
 
-document.querySelector('.section-map__bookmark').addEventListener('click', (ev) => {
-	const deleteIconEl = ev.target.closest('.btn-bookmark-delete');
-	const eventId = deleteIconEl.parentElement.id;
-
-	if (deleteIconEl) {
-		const bookmarks = document.querySelectorAll('.section-map__book-clip');
-
-		deleteBookmark(bookmarks, eventId);
-	}
-});
-
-document.querySelector('.btn-bookmark').addEventListener('click', showBookmarkBar);
-
-function showBookmarkBar(ev) {
+function displayBookmarkBar(ev) {
 	const bookmarkBtn = ev.target.closest('.btn-bookmark');
 
 	if (bookmarkBtn) {
@@ -194,37 +199,37 @@ function deleteBookmark(bookmarks, eventId) {
 	}
 }
 
-function controlLikes(ev) {
-	const bookmark = ev.target.closest('.event-clip');
+function controlBookmark(ev) {
+	const bookmark = ev.target.closest('.icon-bookmark');
 
 	if (bookmark) {
 		const eventId = bookmark.parentElement.parentElement.id;
 		const idx = bookmark.parentElement.parentElement.dataset.idx;
-		const selectedEvent = eventsData[idx];
-		const lat = selectedEvent.venue ? selectedEvent.venue.lat : selectedEvent.group.lat;
-		const lng = selectedEvent.venue ? selectedEvent.venue.lon : selectedEvent.group.lon;
-		const bookmarkedBefore = bookmarkData[eventId] !== undefined;
+		const eventData = eventsData[idx];
+		const lat = eventData.venue ? eventData.venue.lat : eventData.group.lat;
+		const lng = eventData.venue ? eventData.venue.lon : eventData.group.lon;
+		const hasBookmark = bookmarkData[eventId] !== undefined;
 		const bookmarkIcon = bookmark.children[0];
-		let bookmarkList;
+		let bookmarkInfo;
 
-		if (bookmarkedBefore) {
-			const bookmarkEl = document.querySelectorAll('.section-map__book-clip');
+		if (hasBookmark) {
+			const bookmarksEl = document.querySelectorAll('.section-map__bookmark--list');
 
-			deleteBookmark(bookmarkEl, eventId);
+			deleteBookmark(bookmarksEl, eventId);
 		} else {
-			bookmarkList = {
+			bookmarkInfo = {
 				eventId,
-				eventName: selectedEvent.name,
-				date: selectedEvent.local_date,
-				img: selectedEvent.group.key_photo.highres_link,
+				eventName: eventData.name,
+				date: eventData.local_date,
+				img: eventData.group.key_photo.highres_link,
 				latLng: { lat, lng },
 			};
 
-			bookmarkData[eventId] = bookmarkList;
+			bookmarkData[eventId] = bookmarkInfo;
 
 			localStorage.setItem('bookmark', JSON.stringify(bookmarkData));
 
-			displayBookmarkList(bookmarkList);
+			displayBookmarkList(bookmarkInfo);
 
 			bookmarkIcon.classList.add('selected');
 		}
@@ -232,7 +237,7 @@ function controlLikes(ev) {
 }
 
 function displayBookmarkList(bookmark) {
-	const htmlBookmarkStr = makeBookmarkEl(bookmark);
+	const htmlBookmarkStr = makeBookmarkHtml(bookmark);
 
 	document.querySelector('.section-map__bookmark').insertAdjacentHTML('beforeend', htmlBookmarkStr);
 
@@ -240,13 +245,13 @@ function displayBookmarkList(bookmark) {
 	document.querySelector('.bookmark-count').classList.remove('inactive');
 }
 
-function makeBookmarkEl(bookmark) {
+function makeBookmarkHtml(bookmark) {
 	return `
-		<li class="section-map__book-clip" id="${bookmark.eventId}">
-			<img class="section-map__book-clip-img" src="${bookmark.img}">
-			<div class="book-clip-info">
+		<li class="section-map__bookmark--list" id="${bookmark.eventId}">
+			<img class="section-map__bookmark--img" src="${bookmark.img}">
+			<div class="bookmark--info">
 					<div class="section-map__event-name">${bookmark.eventName}</div>
-					<div class="section-map__book-clip-date">${bookmark.date}</div>
+					<div class="section-map__bookmark--date">${bookmark.date}</div>
 					<div class="btn-move" data-lat="${bookmark.latLng.lat}" data-lng="${bookmark.latLng.lng}">move to this place<span>&rarr;</span></div>
 			</div>
 			<div class="icon btn-bookmark-delete">
@@ -258,7 +263,7 @@ function makeBookmarkEl(bookmark) {
 	`;
 }
 
-function initMap() {
+function initializeMap() {
 	map = new google.maps.Map(document.getElementById('map'), {
 		center: { lat: 37.773972, lng: -122.431297 },
 		zoom: 13,
@@ -268,37 +273,47 @@ function initMap() {
 	const searchBox = new google.maps.places.SearchBox(input);
 
 	searchBox.addListener('places_changed', () => {
-		latLng.lat = searchBox.getPlaces()[0].geometry.location.lat();
-		latLng.lng = searchBox.getPlaces()[0].geometry.location.lng();
+		location.lat = searchBox.getPlaces()[0].geometry.location.lat();
+		location.lng = searchBox.getPlaces()[0].geometry.location.lng();
 
-		controlMeetUpData(latLng);
+		cityInfo.photoUrl = searchBox.getPlaces()[0].photos[0].getUrl();
+		cityInfo.name = searchBox.getPlaces()[0].name;
+
+		controlMeetUpData();
 	});
 
 	google.maps.event.addListener(map, 'click', (event) => {
 		const latClicked = event.latLng.lat();
 		const lonClicked = event.latLng.lng();
 
-		latLng.lat = latClicked;
-		latLng.lng = lonClicked;
+		location.lat = latClicked;
+		location.lng = lonClicked;
 
 		controlMeetUpData();
 	});
 }
 
-function controlMeetUpData(location) {
+function controlMeetUpData() {
+	const allDataPromises = [];
 	const meetUpPromise = requestMeetUpLists();
+	const topicPromise = requestTopics();
 
-	meetUpPromise
+	allDataPromises.push(meetUpPromise);
+	allDataPromises.push(topicPromise);
+
+	Promise.all(allDataPromises)
 		.then(saveUpcomingEvents)
 		.then(changeMapView)
+		.then(displayTopic)
 		.then(displayEvents)
 		.then(displayLists)
+		.then(displayCityInfo)
 		.catch(handleError)
 }
 
 function requestMeetUpLists() {
 	return new Promise((resolve, reject) => {
-		const url = `https://api.meetup.com/find/upcoming_events?&sign=true&lat=${latLng.lat}&lon=${latLng.lng}2&key=d1f4549d314392d4b48651c3e4a&fields=event_hosts,comment_count,group_key_photo&page=20`;
+		const url = `https://api.meetup.com/find/upcoming_events?&sign=true&lat=${location.lat}&lon=${location.lng}2&key=d1f4549d314392d4b48651c3e4a&fields=event_hosts,comment_count,group_key_photo&page=10`;
 
 		$.ajax({
 			dataType: 'jsonp',
@@ -314,13 +329,72 @@ function requestMeetUpLists() {
 	});
 }
 
-function saveUpcomingEvents(response) {
-	eventsData = response.data.events;
-	console.log(response.data);
+function requestTopics() {
+	return new Promise((resolve, reject) => {
+		const url = `https://api.meetup.com/find/topic_categories?&sign=true&photo-host=public&lon=${location.lng}&lat=${location.lat}`;
+
+		$.ajax({
+			dataType: 'jsonp',
+			url,
+			type: 'GET',
+			success: function handleData(data) {
+				resolve(data);
+			},
+			error: function handleError(error) {
+				reject(error);
+			},
+		});
+	});
 }
 
 function changeMapView() {
-	map.setCenter(latLng);
+	map.setCenter(location);
+}
+
+function displayTopic() {
+	const topics = topicData.slice();
+
+	document.querySelector('.section-topic__wrapper').innerHTML = '';
+
+	while (topics.length) {
+		const topic = topics.splice(Math.floor(Math.random() * topics.length), 1)[0];
+
+		const topicListEl = document.createElement('li');
+		const topicImageEl = document.createElement('div');
+		const topicLabelEl = document.createElement('div');
+
+		topicImageEl.className = 'section-topic__img';
+		topicImageEl.style.backgroundImage = `linear-gradient(to right, rgba(0,0,0,.5), rgba(0,0,0,.5)), url(${topic.photo.photo_link})`;
+
+		topicLabelEl.className = 'section-topic__name';
+		topicLabelEl.textContent = topic.name;
+
+		topicListEl.className = 'section-topic__wrapper--topic';
+		topicListEl.appendChild(topicImageEl);
+		topicListEl.appendChild(topicLabelEl);
+
+		document.querySelector('.section-topic__wrapper').appendChild(topicListEl);
+	}
+}
+
+function displayCityInfo() {
+	const cityPhotoEl = document.querySelector('.section-city__img');
+	const cityNameEl = document.querySelector('.section-city__city-name');
+	const memberCountEl = document.querySelector('.section-city__city-member');
+
+	cityPhotoEl.src = cityInfo.photoUrl;
+
+	cityNameEl.textContent = cityInfo.name;
+
+	memberCountEl.textContent = `Total :  ${cityInfo.memberCount} members`;
+
+	document.querySelector('.section-city').classList.remove('inactive');
+}
+
+function saveUpcomingEvents(response) {
+	eventsData = response[0].data.events;
+	topicData = response[1].data;
+	cityInfo.memberCount = formatNumber(response[0].data.city.member_count);
 }
 
 function displayEvents() {
@@ -349,51 +423,71 @@ function displayLists() {
 		createdTime = convertCreatedTime(createdTime);
 
 		const listMarkup = `
-		<li class="section-list__event-info" id="${eventsData[i].id}" data-idx="${i}">
-			<div class="section-list__host-info">
-				<img class="section-list__host-img" src="${hostImg}">
-				<div class="section-list__host-name">${hostName}</div>
-				<div class="section-list__created">${createdTime}</div>
-			</div>
-			<div class="section-list__event-details">
-				<div class="section-list__event-name">${eventsData[i].name}</div>
-				<div class="section-list__group-name">${eventsData[i].group.name}</div>
-				<div class="section-list__date">Date : ${eventsData[i].local_date}</div>
-				<div class="section-list__time">Time : ${eventsData[i].local_time}</div>
-				<div class="section-list__rsvp">RSVP : ${eventsData[i].yes_rsvp_count} guests</div>
-				<div class="icon event-clip">
-						<svg class="icon-heart">
-								<use xlink:href="/assets/images/sprite.svg#icon-heart"></use>
+			<li class="section-list__event-info" id="${eventsData[i].id}" data-idx="${i}">
+				<div class="section-list__host-info">
+					<img class="section-list__host-img" src="${hostImg}">
+					<div class="section-list__host-name">${hostName}</div>
+					<div class="section-list__created">${createdTime}</div>
+				</div>
+				<div class="section-list__event-details">
+					<div class="section-list__event-name">${eventsData[i].name}</div>
+					<div class="section-list__group-name">${eventsData[i].group.name}</div>
+					<div class="section-list__date">Date : ${eventsData[i].local_date}</div>
+					<div class="section-list__time">Time : ${eventsData[i].local_time}</div>
+					<div class="section-list__rsvp">RSVP : ${eventsData[i].yes_rsvp_count} guests</div>
+					<div class="icon icon-bookmark">
+							<svg class="icon-heart">
+									<use xlink:href="/assets/images/sprite.svg#icon-heart"></use>
+							</svg>
+					</div>
+					<div class="icon comment-wrapper">
+						<svg class="icon-comment">
+							<use xlink:href="/assets/images/sprite.svg#icon-comment"></use>
 						</svg>
+						<span>${commentCount}</span>
+					</div>
 				</div>
-				<div class="icon comment-wrapper">
-					<svg class="icon-comment">
-						<use xlink:href="/assets/images/sprite.svg#icon-comment"></use>
-					</svg>
-					<span>${commentCount}</span>
-				</div>
-			</div>
-		</li>
+			</li>
 		`;
 
 		lists += listMarkup;
 	}
 
-	document.querySelector('.section-list__container').innerHTML = '';
 	document.querySelector('.section-list__container').innerHTML = lists;
+}
+
+function formatNumber(number) {
+	const member = number.toString().split('');
+	let result = '';
+	let count = 0;
+	let limit = 4;
+
+	return member.reduceRight((acc, cur) => {
+		count++;
+
+		if (count === limit) {
+			result = cur + ',' + acc;
+			count = 0;
+			limit = 3;
+		} else {
+			result = cur + acc;
+		}
+
+		return result;
+	}, result);
 }
 
 function convertCreatedTime(milliSec) {
 	const created = (milliSec) / (1000 * 60 * 60);
 	const now = new Date() / (1000 * 60 * 60);
-	let timeDiff = parseInt(now - created);
+	let timeElapsed = parseInt(now - created);
 	let timeLable;
 
-	if (timeDiff >= 24) {
-		timeDiff = parseInt(timeDiff % 24);
-		timeLable = timeDiff === 1 ? `${timeDiff} day ago` : `${timeDiff} days ago`;
+	if (timeElapsed >= 24) {
+		timeElapsed = parseInt(timeElapsed % 24);
+		timeLable = timeElapsed === 1 ? `${timeElapsed} day ago` : `${timeElapsed} days ago`;
 	} else {
-		timeLable === 1 ? `${timeDiff} hour ago`: `${timeDiff} hours ago`;
+		timeLable = timeLable === 1 ? `${timeElapsed} hour ago` : `${timeElapsed} hours ago`;
 	}
 
 	return timeLable;
