@@ -17,15 +17,18 @@ html, body {
 
 body {
     padding: 10px 0px;
+    position: relative;
 }
 
 h1 {
     text-align: center;
+    font-size: 22px;
 }
 
 .row {
     width: 1140px;
     margin: 0 auto;
+    position: relative;
 }
 
 .header {
@@ -39,6 +42,27 @@ h1 {
     align-items: center;
     margin-bottom: 20px;
     position: relative;
+
+    .company-name {
+        display: flex;
+        flex-direction: column;
+        letter-spacing: 1.3px;
+        position: absolute;
+        left: 47px;
+        top: 20px;
+        font-size: 15px;
+        color: $color-black;
+    }
+
+    .name-label-1 {
+        display: block;
+        margin-bottom: 3px;
+    }
+
+    .name-label-2 {
+        display: block;
+        margin-left: 17px;
+    }
 
     .input-search {
         position: relative;
@@ -100,11 +124,12 @@ h1 {
         color: rgba(#F59A83, .8);
         font-weight: 700;
         font-size: 18px;
+        user-select: none;
+        cursor: pointer;
     }
 }
 
 .section-map {
-    // width: 1140px;
     margin: 0 auto;
     text-align: center;
     display: flex;
@@ -131,9 +156,12 @@ h1 {
         z-index: 1000;
         margin: 0;
         overflow: scroll;
+        transition: all .4s;
+        transform: translateX(0px);
+        opacity: 1;
     }
 
-    &__book-clip {
+    &__bookmark--list {
         margin: 0;
         margin-bottom: 10px;
         list-style: none;
@@ -152,7 +180,7 @@ h1 {
             box-shadow: 2px 2px 10px 0 rgba(46, 61, 73, 0.1);
         }
 
-        .book-clip-info {
+        .bookmark--info {
             display: flex;
             flex-direction: column;
             padding-left: 10px;
@@ -180,13 +208,13 @@ h1 {
         }
     }
 
-    &__book-clip-img {
+    &__bookmark--img {
         width: 110px;
         height: 100px;
         border-radius: 3px;
     }
 
-    &__book-clip-date {
+    &__bookmark--date {
         text-align: left;
         margin-top: 5px;
         font-size: 13px;
@@ -212,7 +240,6 @@ h1 {
     width: 1140px;
     display: flex;
     flex-direction: row;
-    padding-top: 50px;
     padding-bottom: 50px;
 }
 
@@ -221,6 +248,67 @@ h1 {
     height: 600px;
     padding: 10px 20px;
     border-right: 1px solid $color-grey-light-1;
+
+    &__img {
+        width: 270px;
+        border-radius: 7px;
+    }
+
+    &__city-member,
+    &__local-time {
+        font-size: 17px;
+        margin-top: 10px;
+        letter-spacing: .6px;
+    }
+}
+
+.section-topic {
+    width: 100%;
+    height: 230px;
+    margin-top: 30px;
+    margin-bottom: 30px;
+    border-radius: 7px;
+    overflow: hidden;
+    position: relative;
+    background-color: rgba($color-grey-light-1, .38);
+
+    &__wrapper {
+        display: flex;
+        flex-direction: row;
+        height: 230px;
+        margin: 0;
+        align-items: center;
+        padding-left: 20px;
+        position: absolute;
+        user-select: none;
+
+        &--topic {
+            list-style: none;
+            margin-right: 20px;
+            position: relative;
+            text-align: center;
+        }
+    }
+
+    &__img {
+        width: 250px;
+        height: 170px;
+        border-radius: 7px;
+        background-size: cover;
+        transition: all .2s;
+    }
+
+    &__name {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -70%);
+        color: #ffffff;
+        font-weight: 700;
+        letter-spacing: 1px;
+        width: 200px;
+        
+    }
 }
 
 .section-list {
@@ -285,6 +373,7 @@ h1 {
         color: rgba($color-black, .8);
         font-size: 15px;
         transition: all .3s;
+        cursor: pointer;
 
         & > *:not(:last-child) {
             margin-bottom: 5px;
@@ -329,9 +418,7 @@ h1 {
     cursor: pointer;
 
     &:hover {
-        &:hover {
-            animation: bounce .6s infinite;
-        }
+        animation: bounce .6s infinite;
     }
 }
 
@@ -352,7 +439,6 @@ h1 {
     width: 45px;
     height: 45px;
     fill: #F59A83;
-    align-self: flex-end;
     position: absolute;
     right: 17px;
     top: 20px;
@@ -367,6 +453,16 @@ h1 {
     transition: all .3s;
     fill: $color-grey-light-2;
     fill: $color-black;
+}
+
+.icon-cross {
+    width: 30px;
+    height: 30px;
+    position: absolute;
+    right: -7px;
+    top: -7px;
+    fill: rgba($color-black, .8);
+    cursor: pointer;
 }
 
 .comment-wrapper {
@@ -421,4 +517,112 @@ footer {
 
 .inactive {
     display: none !important;
+}
+
+.bookmark-inactive {
+    visibility: hidden;
+    opacity: 0;
+    transform: translateX(200px);
+}
+
+.side-bar {
+    width: 360px;
+    height: 770px;
+    background-color: skyblue;
+    position: fixed;
+    top: 19px;
+    left: 0;
+    background-color: rgba($color-grey-light-2, .7 );
+    border-top-right-radius: 10px;
+    border-bottom-right-radius: 10px;
+    opacity: 1;
+    transform: translateX(0px);
+    transition: all .3s;
+
+    &__group-info {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 0px 5px;
+
+        &--img {
+            width: 340px;
+            height: 200px;
+            border-radius: 3px;
+        }
+
+        &--short-description {
+            display: block;
+            width: 340px;
+            padding: 5px 14px;
+            height: 70px;
+            line-height: 20px;
+            font-size: 15px;
+            white-space: normal;
+            text-overflow: ellipsis;
+            overflow: hidden;
+            color: $color-black;
+            text-align: justify;
+            background: rgba(#fff, .7);
+            border-radius: 5px;
+        }
+    }
+
+    &__album {
+        display: flex;
+        flex-direction: row;
+        width: 340px;
+        border-radius: 5px;
+        overflow: hidden;
+
+        &--photo {
+            width: 33.333%;
+            height: 100px;
+        }
+    }
+
+    &__comment {
+        padding: 10px 5px 5px 5px;
+        overflow: scroll;
+        height: 270px;
+
+        &--list {
+            display: flex;
+            flex-direction: row;
+            align-content: center;
+        }
+
+        .comment-user {
+            font-size: 12px;
+            text-align: center;
+            padding-left: 10px;
+            height: 70px;
+            margin-right: 15px;
+            width: 80px;
+        }
+
+        .user-photo {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+        }
+
+        &--comment {
+            background: rgba(#fff, .7);
+            margin-top: 5px;
+            padding: 2px 14px;
+            border-radius: 5px;
+            width: 248px;
+            height: 62px;
+            line-height: 20px;
+            white-space: normal;
+            overflow: hidden;
+            font-size: 13px;
+        }
+    }
+}
+
+.sidebar-inactive {
+    transform: translateX(-200px);
+    opacity: 0;
 }

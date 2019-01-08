@@ -14,6 +14,7 @@ const cityInfo = {};
 const location = {};
 let topicData = [];
 let map;
+let topicCategory = '';
 
 window.onload = function initializeApp() {
 	bookmarkData = JSON.parse(localStorage.getItem('bookmark'));
@@ -45,11 +46,25 @@ function setupEventListener() {
 		if (bookmarkDelete) {
 			const bookmarks = document.querySelectorAll('.section-map__bookmark--list');
 
+			eventsData.length = 0;
+
 			deleteBookmark(bookmarks, eventId);
 		}
 	});
 
 	document.querySelector('.btn-bookmark').addEventListener('click', displayBookmarkBar);
+
+	document.querySelector('.section-topic__wrapper').addEventListener('click', (ev) => {
+		const topicItem = ev.target.closest('.section-topic__wrapper--topic');
+
+		if (topicItem) {
+			topicCategory = topicItem.id;
+
+			controlMeetUpData();
+		}
+	});
+
+	document.querySelector('.section-topic__wrapper').addEventListener('mousedown', dragElement);
 }
 
 function hideSidebar(ev) {
@@ -305,7 +320,7 @@ function controlMeetUpData() {
 		.then(saveUpcomingEvents)
 		.then(changeMapView)
 		.then(displayTopic)
-		.then(displayEvents)
+		.then(displayEventsOnMap)
 		.then(displayLists)
 		.then(displayCityInfo)
 		.catch(handleError)
@@ -313,7 +328,7 @@ function controlMeetUpData() {
 
 function requestMeetUpLists() {
 	return new Promise((resolve, reject) => {
-		const url = `https://api.meetup.com/find/upcoming_events?&sign=true&lat=${location.lat}&lon=${location.lng}2&key=d1f4549d314392d4b48651c3e4a&fields=event_hosts,comment_count,group_key_photo&page=10`;
+		const url = `https://api.meetup.com/find/upcoming_events?&sign=true&lat=${location.lat}&lon=${location.lng}2&key=d1f4549d314392d4b48651c3e4a&fields=event_hosts,comment_count,group_key_photo&page=20&topic_category=${topicCategory}`;
 
 		$.ajax({
 			dataType: 'jsonp',
@@ -326,7 +341,10 @@ function requestMeetUpLists() {
 				reject(error);
 			},
 		});
-	});
+	})
+		.finally(() => {
+			topicCategory = '';
+		});
 }
 
 function requestTopics() {
@@ -370,6 +388,7 @@ function displayTopic() {
 		topicLabelEl.textContent = topic.name;
 
 		topicListEl.className = 'section-topic__wrapper--topic';
+		topicListEl.id = topic.id;
 		topicListEl.appendChild(topicImageEl);
 		topicListEl.appendChild(topicLabelEl);
 
@@ -397,16 +416,35 @@ function saveUpcomingEvents(response) {
 	cityInfo.memberCount = formatNumber(response[0].data.city.member_count);
 }
 
-function displayEvents() {
+function displayEventsOnMap() {
 	for (let i = 0; i < eventsData.length; i++) {
 		const lat = eventsData[i].venue ? eventsData[i].venue.lat : eventsData[i].group.lat;
 		const lng = eventsData[i].venue ? eventsData[i].venue.lon : eventsData[i].group.lon;
+
+		const contentString = `
+			<img src="${eventsData[i].group.key_photo.thumb_link}">
+			<div>${eventsData[i].name}</div>
+		`;
+
+		const infoWindow = new google.maps.InfoWindow({
+			content: contentString,
+			maxWidth: 250,
+		});
+
 		const newMarker = new google.maps.Marker({
 			position: {
 				lat,
 				lng,
 			},
 			map,
+		});
+
+		newMarker.addListener('mouseover', () => {
+			infoWindow.open(map, newMarker);
+		});
+
+		newMarker.addListener('mouseout', () => {
+			infoWindow.close();
 		});
 	}
 }
@@ -496,4 +534,31 @@ function convertCreatedTime(milliSec) {
 function handleError(err) {
 	alert('Something went wrong. Could you try it again?');
 	console.log(err);
+}
+
+function dragElement(ev) {
+	const topicEl = document.querySelector('.section-topic__wrapper');
+	let position1 = 0;
+	let position2 = 0;
+
+	topicEl.onmousedown = dragMouseDown;
+
+	function dragMouseDown(ev) {
+		position2 = ev.clientX;
+
+		document.onmouseup = closeDragElement;
+		document.onmousemove = elementDrag;
+	}
+
+	function elementDrag(ev) {
+		position1 = position2 - ev.clientX;
+		position2 = ev.clientX;
+
+		topicEl.style.left = (topicEl.offsetLeft - position1) + 'px';
+	}
+
+	function closeDragElement() {
+		document.onmouseup = null;
+		document.onmousemove = null;
+	}
 }
