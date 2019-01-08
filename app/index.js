@@ -15,6 +15,7 @@ const location = {};
 let topicData = [];
 let map;
 let topicCategory = '';
+const markers = [];
 
 window.onload = function initializeApp() {
 	bookmarkData = JSON.parse(localStorage.getItem('bookmark'));
@@ -32,21 +33,22 @@ function setupEventListener() {
 	document.querySelector('.btn-cross').addEventListener('click', hideSidebar);
 
 	document.querySelector('.section-list__container').addEventListener('click', (ev) => {
-		if (ev.target.closest('.icon-bookmark')) {
+		const isBookmarkIcon = ev.target.closest('.icon-bookmark');
+		const isEventList = ev.target.closest('.section-list__event-details');
+
+		if (isBookmarkIcon) {
 			controlBookmark(ev);
-		} else if (ev.target.closest('.section-list__event-details')) {
+		} else if (isEventList) {
 			controlGroupInfo(ev);
 		}
 	});
 
 	document.querySelector('.section-map__bookmark').addEventListener('click', (ev) => {
-		const bookmarkDelete = ev.target.closest('.btn-bookmark-delete');
-		const eventId = bookmarkDelete.parentElement.id;
+		const eventId = ev.target.closest('.btn-bookmark-delete').parentElement.id;
+		const isDeleteBtn = ev.target.classList.contains('icon-bin');
 
-		if (bookmarkDelete) {
+		if (isDeleteBtn) {
 			const bookmarks = document.querySelectorAll('.section-map__bookmark--list');
-
-			eventsData.length = 0;
 
 			deleteBookmark(bookmarks, eventId);
 		}
@@ -89,9 +91,9 @@ function controlGroupInfo(ev) {
 	allDataPromises.push(commentPromise);
 
 	Promise.all(allDataPromises)
-		.then((detailedEventInfo) => {
-			displayGroupInfo(detailedEventInfo[0].data);
-			displayComments(detailedEventInfo[1].data);
+		.then((eventDetails) => {
+			displayGroupInfo(eventDetails[0].data);
+			displayComments(eventDetails[1].data);
 		})
 		.catch(handleError);
 }
@@ -108,11 +110,9 @@ function displayGroupInfo(groupInfo) {
 
 	albumsEls.forEach((image, idx) => {
 		try {
-			if (groupInfo.event_sample[idx].photo_album.photo_sample[idx].photo_link) {
-				image.src = groupInfo.event_sample[idx].photo_album.photo_sample[idx].photo_link;
-			}
+			image.src = groupInfo.event_sample[idx].photo_album.photo_sample[idx].photo_link;
 		} catch (err) {
-			console.log(err);
+			image.src = '/assets/images/default-user-image.png';
 		}
 
 		document.querySelector('.side-bar').classList.remove('sidebar-inactive');
@@ -121,9 +121,14 @@ function displayGroupInfo(groupInfo) {
 
 function displayComments(commentInfo) {
 	let commentHtmlStr = '';
+	let memberImg;
 
 	commentInfo.forEach((comment) => {
-		const memberImg = comment.member.photo.thumb_link ? comment.member.photo.thumb_link : '/assets/images/default-user-image.png';
+		if (comment.member.photo && comment.member.photo.thumb_link) {
+			memberImg = comment.member.photo.thumb_link;
+		} else {
+			memberImg = '/assets/images/default-user-image.png';
+		}
 
 		commentHtmlStr += `
 			<li class="side-bar__comment--list">
@@ -147,7 +152,7 @@ function requestComments(eventId, urlName) {
 			dataType: 'jsonp',
 			url,
 			type: 'GET',
-			success: function handleData(data) {
+			success: function handleCommentData(data) {
 				resolve(data);
 			},
 			error: function handleError(error) {
@@ -165,7 +170,7 @@ function requestGroupInfo(urlName) {
 			dataType: 'jsonp',
 			url,
 			type: 'GET',
-			success: function handleData(data) {
+			success: function handleGroupData(data) {
 				resolve(data);
 			},
 			error: function handleError(error) {
@@ -196,9 +201,9 @@ function deleteBookmark(bookmarks, eventId) {
 
 	document.querySelector('.bookmark-count').textContent = Object.values(bookmarkData).length;
 
-	const isEmpty = Object.values(bookmarkData).length === 0;
+	const isBoomarkEmpty = Object.values(bookmarkData).length === 0;
 
-	if (isEmpty) {
+	if (isBoomarkEmpty) {
 		document.querySelector('.bookmark-count').classList.add('inactive');
 		document.querySelector('.section-map__bookmark').classList.add('bookmark-inactive');
 	}
@@ -223,11 +228,11 @@ function controlBookmark(ev) {
 		const eventData = eventsData[idx];
 		const lat = eventData.venue ? eventData.venue.lat : eventData.group.lat;
 		const lng = eventData.venue ? eventData.venue.lon : eventData.group.lon;
-		const hasBookmark = bookmarkData[eventId] !== undefined;
+		const hasSameBookmark = bookmarkData[eventId] !== undefined;
 		const bookmarkIcon = bookmark.children[0];
 		let bookmarkInfo;
 
-		if (hasBookmark) {
+		if (hasSameBookmark) {
 			const bookmarksEl = document.querySelectorAll('.section-map__bookmark--list');
 
 			deleteBookmark(bookmarksEl, eventId);
@@ -280,7 +285,10 @@ function makeBookmarkHtml(bookmark) {
 
 function initializeMap() {
 	map = new google.maps.Map(document.getElementById('map'), {
-		center: { lat: 37.773972, lng: -122.431297 },
+		center: {
+			lat: 37.773972,
+			lng: -122.431297,
+		},
 		zoom: 13,
 	});
 
@@ -334,17 +342,15 @@ function requestMeetUpLists() {
 			dataType: 'jsonp',
 			url,
 			type: 'GET',
-			success: function handleData(data) {
+			success: function handleMeetUpData(data) {
+				topicCategory = '';
 				resolve(data);
 			},
-			error: function handleError(error) {
+			error: function handleMeetUpError(error) {
 				reject(error);
 			},
 		});
-	})
-		.finally(() => {
-			topicCategory = '';
-		});
+	});
 }
 
 function requestTopics() {
@@ -355,10 +361,10 @@ function requestTopics() {
 			dataType: 'jsonp',
 			url,
 			type: 'GET',
-			success: function handleData(data) {
+			success: function handleTopicData(data) {
 				resolve(data);
 			},
-			error: function handleError(error) {
+			error: function handleTopicError(error) {
 				reject(error);
 			},
 		});
@@ -370,16 +376,13 @@ function changeMapView() {
 }
 
 function displayTopic() {
-	const topics = topicData.slice();
-
 	document.querySelector('.section-topic__wrapper').innerHTML = '';
 
-	while (topics.length) {
-		const topic = topics.splice(Math.floor(Math.random() * topics.length), 1)[0];
-
+	for (let i = 0; i < topicData.length; i++) {
 		const topicListEl = document.createElement('li');
 		const topicImageEl = document.createElement('div');
 		const topicLabelEl = document.createElement('div');
+		const topic = topicData[i];
 
 		topicImageEl.className = 'section-topic__img';
 		topicImageEl.style.backgroundImage = `linear-gradient(to right, rgba(0,0,0,.5), rgba(0,0,0,.5)), url(${topic.photo.photo_link})`;
@@ -399,11 +402,14 @@ function displayTopic() {
 function displayCityInfo() {
 	const cityPhotoEl = document.querySelector('.section-city__img');
 	const cityNameEl = document.querySelector('.section-city__city-name');
+	const countryNameEl = document.querySelector('.section-city__city-country');
 	const memberCountEl = document.querySelector('.section-city__city-member');
 
 	cityPhotoEl.src = cityInfo.photoUrl;
 
 	cityNameEl.textContent = cityInfo.name;
+
+	countryNameEl.textContent = `Country : ${cityInfo.country}`;
 
 	memberCountEl.textContent = `Total :  ${cityInfo.memberCount} members`;
 
@@ -412,17 +418,32 @@ function displayCityInfo() {
 
 function saveUpcomingEvents(response) {
 	eventsData = response[0].data.events;
+
 	topicData = response[1].data;
+
 	cityInfo.memberCount = formatNumber(response[0].data.city.member_count);
+	cityInfo.country = response[0].data.city.country.toUpperCase();
 }
 
 function displayEventsOnMap() {
+	for (let i = 0; i < markers.length; i++) {
+		markers[i].setMap(null);
+	}
+
+	markers.length = 0;
+
 	for (let i = 0; i < eventsData.length; i++) {
 		const lat = eventsData[i].venue ? eventsData[i].venue.lat : eventsData[i].group.lat;
 		const lng = eventsData[i].venue ? eventsData[i].venue.lon : eventsData[i].group.lon;
+		const hasPhotoLink = eventsData[i].group.key_photo && eventsData[i].group.key_photo.thumb_link;
+		let imgSrc;
+
+		if (hasPhotoLink) {
+			imgSrc = eventsData[i].group.key_photo.thumb_link;
+		}
 
 		const contentString = `
-			<img src="${eventsData[i].group.key_photo.thumb_link}">
+			<img src="${imgSrc}">
 			<div>${eventsData[i].name}</div>
 		`;
 
@@ -438,6 +459,8 @@ function displayEventsOnMap() {
 			},
 			map,
 		});
+
+		markers.push(newMarker);
 
 		newMarker.addListener('mouseover', () => {
 			infoWindow.open(map, newMarker);
@@ -472,7 +495,7 @@ function displayLists() {
 					<div class="section-list__group-name">${eventsData[i].group.name}</div>
 					<div class="section-list__date">Date : ${eventsData[i].local_date}</div>
 					<div class="section-list__time">Time : ${eventsData[i].local_time}</div>
-					<div class="section-list__rsvp">RSVP : ${eventsData[i].yes_rsvp_count} guests</div>
+					<div class="section-list__rsvp">RSVP : ${eventsData[i].yes_rsvp_count} members</div>
 					<div class="icon icon-bookmark">
 							<svg class="icon-heart">
 									<use xlink:href="/assets/images/sprite.svg#icon-heart"></use>
@@ -533,7 +556,6 @@ function convertCreatedTime(milliSec) {
 
 function handleError(err) {
 	alert('Something went wrong. Could you try it again?');
-	console.log(err);
 }
 
 function dragElement(ev) {

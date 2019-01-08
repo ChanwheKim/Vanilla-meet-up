@@ -1,74 +1,74 @@
 <!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width">
-    <title>Vanilla Meetup</title>
-    <link href="https://fonts.googleapis.com/css?family=Lato:100,300,300i,400,700" rel="stylesheet">
-</head>
-<body>
-    <div class="row">
-        <header class="header">
-            <div class="company-name">
-                <span class="name-label-1">Vanilla</span>
-                <span class="name-label-2">Meetup</span>
-            </div> 
-            <div class="input-search">
-                <input type="text" class="map__input">
-                <button class="btn-search">SEARCH</button>
-            </div>
-            <div class="icon btn-bookmark">
-                <svg class="icon-like">
-                    <use xlink:href="/assets/images/sprite.svg#icon-heart"></use>
-                </svg>
-                <span class="bookmark-count inactive"></span>
-            </div>
-        </header>
-
-        <div class="section-map">
-            <div id="map"></div>
-            <ul class="section-map__bookmark bookmark-inactive"></ul>
-        </div>
-
-        <div class="section-topic">
-            <ul class="section-topic__wrapper"></ul>
-        </div>
-
-        <section class="content">
-            <div class="section-city inactive">
-                <h1 class="section-city__city-name"></h1>
-                <img class="section-city__img" src="" alt="selected city photo">
-                <div class="section-city__city-member"></div>
-                <div class="section-city__local-time"></div>
-            </div>
-
-            <div class="section-list">
-                <ul class="section-list__container"></ul>
-            </div>
-        </section>
-
-        <div class="side-bar sidebar-inactive">
-            <div class="icon btn-cross">
-                <svg class="icon-cross">
-                    <use xlink:href="/assets/images/sprite.svg#icon-small-cross"></use>
-                </svg>
-            </div>
-            <div class="side-bar__group-info">
-                <h1 class="side-bar__group-info--name"></h1>
-                <img class="side-bar__group-info--img" src="" alt="group main photo">
-                <p class="side-bar__group-info--short-description"></p>
-                <div class="side-bar__album">
-                    <img class="side-bar__album--photo" src="" alt="group album photo" onerror="this.src='/assets/images/default-user-image.png'">
-                    <img class="side-bar__album--photo" src="" alt="group album photo" onerror="this.src='/assets/images/default-user-image.png'">
-                    <img class="side-bar__album--photo" src="" alt="group album photo" onerror="this.src='/assets/images/default-user-image.png'">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width">
+        <title>Vanilla Meetup</title>
+        <link href="https://fonts.googleapis.com/css?family=Lato:100,300,300i,400,700" rel="stylesheet">
+    </head>
+    <body>
+        <div class="row">
+            <header class="header">
+                <div class="company-name">
+                    <span class="name-label-1">Vanilla</span>
+                    <span class="name-label-2">MeetUp</span>
+                </div> 
+                <div class="input-search">
+                    <input type="text" class="map__input">
+                    <button class="btn-search">SEARCH</button>
                 </div>
+                <div class="icon btn-bookmark">
+                    <svg class="icon-like">
+                        <use xlink:href="/assets/images/sprite.svg#icon-heart"></use>
+                    </svg>
+                    <span class="bookmark-count inactive"></span>
+                </div>
+            </header>
+
+            <div class="section-map">
+                <div id="map"></div>
+                <ul class="section-map__bookmark bookmark-inactive"></ul>
             </div>
-            <ul class="side-bar__comment"></ul>
+
+            <div class="section-topic">
+                <ul class="section-topic__wrapper"></ul>
+            </div>
+
+            <section class="content">
+                <div class="section-city inactive">
+                    <h1 class="section-city__city-name"></h1>
+                    <img class="section-city__img" src="" alt="selected city photo">
+                    <div class="section-city__city-country"></div>
+                    <div class="section-city__city-member"></div>
+                </div>
+
+                <div class="section-list">
+                    <ul class="section-list__container"></ul>
+                </div>
+            </section>
+
+            <div class="side-bar sidebar-inactive">
+                <div class="icon btn-cross">
+                    <svg class="icon-cross">
+                        <use xlink:href="/assets/images/sprite.svg#icon-small-cross"></use>
+                    </svg>
+                </div>
+                <div class="side-bar__group-info">
+                    <h1 class="side-bar__group-info--name"></h1>
+                    <img class="side-bar__group-info--img" src="" alt="group main photo">
+                    <p class="side-bar__group-info--short-description"></p>
+                    <div class="side-bar__album">
+                        <img class="side-bar__album--photo" src="" alt="group album photo" onerror="this.src='/assets/images/default-user-image.png'">
+                        <img class="side-bar__album--photo" src="" alt="group album photo" onerror="this.src='/assets/images/default-user-image.png'">
+                        <img class="side-bar__album--photo" src="" alt="group album photo" onerror="this.src='/assets/images/default-user-image.png'">
+                    </div>
+                </div>
+                <ul class="side-bar__comment"></ul>
+            </div>
+
+            <footer><p>© 2019 Vanilla MeetUp - All Rights Reserved</p></footer>
         </div>
 
-        <footer><p>© 2019 Vanilla MeetUp - All Rights Reserved</p></footer>
-    </div>
-
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBH2-HGPGrJadRBzQ3roCVFHYT1ODufKI8&libraries=places"></script>
-</body>
+        <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBH2-HGPGrJadRBzQ3roCVFHYT1ODufKI8&libraries=places"></script>
+    </body>
 </html>
