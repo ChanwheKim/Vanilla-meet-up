@@ -2,7 +2,7 @@
   "name": "2nd-test",
   "version": "1.0.0",
   "description": "5th Generation 2nd Test",
-  "author": "Ken Huh <ken@vanillacoding.co>",
+  "author": "Chanwhe Kim",
   "license": "MIT",
   "homepage": "https://github.com/vanilla-coding/2nd-test",
   "scripts": {
@@ -31,7 +31,7 @@
     "url-loader": "1.1.1",
     "webpack": "4.20.2",
     "webpack-cli": "3.1.1",
-    "webpack-dev-server": "3.1.9",
+    "webpack-dev-server": "^3.1.14",
     "webpack-merge": "4.1.4"
   }
 }

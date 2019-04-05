@@ -345,6 +345,7 @@ function requestMeetUpLists() {
 			success: function handleMeetUpData(data) {
 				topicCategory = '';
 				resolve(data);
+				console.log(data);
 			},
 			error: function handleMeetUpError(error) {
 				reject(error);
@@ -555,7 +556,7 @@ function convertCreatedTime(milliSec) {
 }
 
 function handleError(err) {
-	alert('Something went wrong. Could you try it again?');
+	alert('Sorry, something went wrong during getting news data. Could you try it again?');
 }
 
 function dragElement(ev) {
